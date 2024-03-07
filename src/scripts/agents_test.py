@@ -1,21 +1,21 @@
 import boto3
 import os
 from dotenv import load_dotenv
-import logging
 import json
 from langfuse import Langfuse
 
 load_dotenv()
 langfuse = Langfuse()
-page_text = open("data/page.txt", "r").read()
 client = boto3.client("bedrock-agent-runtime")
+AGENT_ID = os.getenv("AGENT_ID")
+AGENT_ALIAS_ID = os.getenv("AGENT_ALIAS_ID")
 
 
-def invoke_agent(langfuse, page_text, client):
+def invoke_agent(langfuse, client):
     output = client.invoke_agent(
-        inputText=f"Summarize the text: {page_text}",
-        agentId="5BCPJZ7OIG",
-        agentAliasId="EJH2X2JTGM",
+        inputText=f"Get the titles from this youtube channel: https://www.youtube.com/@JaysonCasper",
+        agentId=AGENT_ID,
+        agentAliasId=AGENT_ALIAS_ID,
         sessionId="test",
         enableTrace=True,
         endSession=False,
@@ -25,7 +25,7 @@ def invoke_agent(langfuse, page_text, client):
     agent_answer = ""
     try:
         trace = langfuse.trace(
-            name="agent_test_v01", metadata={"model": "bedrock-agent-runtime"}
+            name="agent_test_v02", metadata={"model": "bedrock-agent-runtime"}
         )
         for event in event_stream:
             if "chunk" in event:
@@ -46,6 +46,6 @@ def invoke_agent(langfuse, page_text, client):
     return agent_answer
 
 
-agent_answer = invoke_agent(langfuse, page_text, client)
+agent_answer = invoke_agent(langfuse, client)
 
 print(agent_answer)

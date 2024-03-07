@@ -1,0 +1,57 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Youtube Video titles API",
+        "version": "1.0.0",
+        "description": "APIs for getting youtube video titles by pulling youtube vidoes from the youtube channel URL and return the video titles."
+    },
+    "paths": {
+        "/getVideos": {
+            "post": {
+                "summary": "Gets list of videos for youtube channel link",
+                "description": "Get a list of video titles from a youtube channel. This api takes in the URL for the youtube channel and returns a list of strings for that channel.",
+                "operationId": "getYoutubeVideoTitles",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "url": {
+                                        "type": "string",
+                                        "description": "Url to a youtube channel."
+                                    }
+                                },
+                                "required": [
+                                    "url"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successfully got videos",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "videoTitleList": {
+                                            "type": "string",
+                                            "description": "List of video titles"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request. One or more required fields are missing or invalid."
+                    }
+                }
+            }
+        }
+    }
+}
