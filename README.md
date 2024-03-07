@@ -3,6 +3,7 @@
 ## Folder Contents
 - data - This folder contains data from https://github.com/FranxYao/chain-of-thought-hub
 - src - This contains two folders, Notebooks and Scripts. 
+- lambda_functions - This folder contains the lambda function and OpenAPI spec that are utilized by Bedrock to do function calling, when needed.
 
 You'll find the playground where i've started playing around with the Bedrock implementation of Claude 3 Opus/Sonnet. Across the notebooks and scripts, you'll find simple implementations of a BedrockRuntime client
 that will allow you to invoke the Claude 3 models.
