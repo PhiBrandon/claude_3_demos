@@ -1,0 +1,62 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Addition API",
+        "version": "1.0.0",
+        "description": "APIs for adding numbers together."
+    },
+    "paths": {
+        "/addNumbers": {
+            "post": {
+                "summary": "Given two numbers, adds them together",
+                "description": "Get the answer to the sum of two numbers. The numbers are passed in the request body and then added together.",
+                "operationId": "addNumbers",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "num_1": {
+                                        "type": "integer",
+                                        "description": "First number that should be added"
+                                    },
+                                    "num_2": {
+                                        "type": "integer",
+                                        "description": "Second number that should be added"
+                                    }
+                                },
+                                "required": [
+                                    "num_1",
+                                    "num_2"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successfully added Numbers",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "sum": {
+                                            "type": "integer",
+                                            "description": "Sum of the two numbers."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request. One or more required fields are missing or invalid."
+                    }
+                }
+            }
+        }
+    }
+}
