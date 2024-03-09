@@ -82,3 +82,50 @@ print(tasks[-1].task.extra_state['current_reasoning'][0].thought)
 gen.end(output={"output": step_output.output.response, "tasks": str(current_task), "reasoning": reason})
 
 print(step_output)
+
+# Let's move up to the top layer
+# We can use the ReActAgent as the Agent Runner and Worker combined, the high level API
+agent = ReActAgent.from_tools(tools, llm=llm, verbose=True)
+task = agent.create_task("Multiply 19 and 2")
+# Let's run the step for the particular task
+output = agent.run_step(task.task_id)
+# Print the output
+print(output)
+
+task_list = agent.list_tasks()
+for task in task_list:
+    print(task.task)
+# We see that we only have one task, let's create a more complex task
+    
+complex_task = agent.create_task("Multiply 10 and 2. Add 10 to the result. Then multiply that result by 2.")
+complex_output = agent.run_step(complex_task.task_id)
+print(complex_output)
+
+# Let's get the list of task now
+task_list_updated = agent.list_tasks()
+for t in task_list_updated:
+    print(t.task)
+    print(t.task.extra_state['current_reasoning'])
+    print("="*20)
+# Now we see both the previous task and the new task
+
+
+detail_test_trace = lanfuse.trace(name="agent_detail_extraction", metadata={"model": "claude-3-sonnet-20240229"})
+def get_detail_json(text: str):
+    class UserDetail(BaseModel):
+        name: str
+        age: int
+    system_append = f"Here's a JSON schema to follow:{UserDetail.model_json_schema()} Output a valid JSON object but do not repeat the schema."
+    user_prompt = f"Please extract the user detail from the text: {text}"
+    complete = system_append + "\n" + user_prompt
+    output = llm.complete(complete)
+    return output
+
+user_detail_tool = FunctionTool.from_defaults(fn=get_detail_json)
+tools = [add_tool, multiply_tool, user_detail_tool]
+detail_agent = ReActAgent.from_tools(tools, llm=llm, verbose=True)
+task = detail_agent. create_task("Extract the user detail into json: Duyen is 22 years old.")
+generation = detail_test_trace.generation(input={"task_input": "Extract the user detail into json: Duyen is 22 years old.", "task": task} )
+detail_output = detail_agent.run_step(task.task_id)
+generation.end(output={"output": detail_output.output.response, "reasoning": task.extra_state['current_reasoning']})
+print(detail_output)
