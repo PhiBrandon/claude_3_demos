@@ -1,0 +1,36 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Addition API",
+        "version": "1.0.0",
+        "description": "APIs for adding numbers together."
+    },
+    "paths": {
+        "/getBuckets": {
+            "get": {
+                "summary": "Used to list all the buckets in the current account.",
+                "description": "Return a list of buckets that are in the account.",
+                "operationId": "getBuckets",
+                "responses": {
+                    "200": {
+                        "description": "Gets a list of all buckets in the current aws account",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object"
+                                    }
+                                    
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request. One or more required fields are missing or invalid."
+                    }
+                }
+            }
+        }
+    }
+}

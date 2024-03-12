@@ -16,10 +16,17 @@ print(AGENT_ALIAS_ID)
 # Get the titles from this youtube channel: https://www.youtube.com/@QuinnNolan
 def invoke_agent(langfuse, client):
     output = client.invoke_agent(
-        inputText=f"Get the video titles from https://www.youtube.com/@DiamondDave1",
+        inputText="""
+        Get the buckets from the account, then respond like this:
+        BucketName:  CreationDate: january 1st 2023 \n
+        BucketName: somebucketname CreationDate: march 1st 2023 \n
+        BucketName:  somebucketname CreationDate: June 2 2019 \n
+        
+        Next, add 102301 + 21213. Return all the results.
+        """,
         agentId=AGENT_ID,
         agentAliasId=AGENT_ALIAS_ID,
-        sessionId="test_new_agent_v04",
+        sessionId="test_new_agent_v05",
         enableTrace=True,
         endSession=False,
     )
@@ -28,13 +35,11 @@ def invoke_agent(langfuse, client):
     agent_answer = ""
     try:
         trace = langfuse.trace(
-            name="agent_add_youtube_test_v04",
+            name="agent_list_buckets_test_v01",
             metadata={"model": "bedrock-agent-runtime"},
         )
         for event in event_stream:
-            gen = trace.generation(
-                name="agent_generation"
-            )
+            gen = trace.generation(name="agent_generation", model="claude-instant-1.2")
             if "chunk" in event:
                 data = event["chunk"]["bytes"]
                 agent_answer = data.decode("utf8")
@@ -44,7 +49,6 @@ def invoke_agent(langfuse, client):
                     output={
                         "output": agent_answer,
                     },
-                    
                 )
             # End event indicates that the request finished successfully
             elif "trace" in event:
