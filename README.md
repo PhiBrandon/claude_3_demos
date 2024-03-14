@@ -17,7 +17,9 @@ that will allow you to invoke the Claude 3 models.
 src/notebooks/bedrock.ipynb is the base implementation that all other implementations follow.
 src/notebooks/llama_anthropic.ipynb is testing of the Llama_index implementation of the Anthropic client for Claude 3.
 src/notebooks/evals.ipynb is running evaluations with the Anthropic client.
-
+anthropic-tools/* is a folder from https://github.com/anthropics/anthropic-tools/tree/main/tool_use_package . If you follow the README, you will be able to create your own functions that even Claude Haiku
+can run successfully.
+anthropic-tools/tooler.py is an example of using tools. You're able to list S3 buckets, get the time, then write it to file locally.
 
 
 If you have questions feel free to reach out.

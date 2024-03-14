@@ -1,4 +1,5 @@
 .env
 venv
+anthropictools
 lambda_functions/api_function/package
 lambda_functions/api_function/deployment_package.zip

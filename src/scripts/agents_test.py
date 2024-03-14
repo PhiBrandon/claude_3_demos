@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import json
 from langfuse import Langfuse
 import datetime
+from anthropic import Anthropic
 
 load_dotenv()
 langfuse = Langfuse()
@@ -11,9 +12,10 @@ client = boto3.client("bedrock-agent-runtime")
 AGENT_ID = os.getenv("AGENT_ID")
 AGENT_ALIAS_ID = os.getenv("AGENT_ALIAS_ID")
 print(AGENT_ALIAS_ID)
-
+anthropic_client = Anthropic()
 
 # Get the titles from this youtube channel: https://www.youtube.com/@QuinnNolan
+# TODO: Hook up the cost of every call along the way.
 def invoke_agent(langfuse, client):
     output = client.invoke_agent(
         inputText="""

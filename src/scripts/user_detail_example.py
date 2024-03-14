@@ -76,7 +76,7 @@ class BedrockClient:
 
 
 def main():
-    client = BedrockClient(profile_name="bigfrog")
+    client = BedrockClient(profile_name="your-aws-profile-name-here")
 
     data = [
         "Brandon is 30 and a data engineer.",
