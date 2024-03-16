@@ -1,10 +1,15 @@
 from anthropic import Anthropic
 from dotenv import load_dotenv
 from pydantic import BaseModel
+import pandas as pd
+from typing import List
+from langfuse import Langfuse
+from langfuse.client import StatefulTraceClient
 
 load_dotenv()
 
 anthropic = Anthropic()
+langfuse = Langfuse()
 
 
 class UserDetail(BaseModel):
@@ -16,6 +21,15 @@ class UserDetail(BaseModel):
     age: int
     occupation: str
 
+
+class JobSkills(BaseModel):
+    """Skills required for a job."""
+
+    skills: List[str]
+
+
+data_jobs = pd.read_csv("../../data/dataset_indeed-scraper_2023-10-23_07-07-15.csv")
+job_desc = data_jobs["description"]
 
 data = [
     "Samantha is 28 and a marketing analyst.",
@@ -416,15 +430,37 @@ data = [
 ]
 
 
-def get_user_detail(data: str, pydantic_model: BaseModel):
+def get_user_detail(
+    data: str, pydantic_model: BaseModel, trace: StatefulTraceClient, version: str
+):
     system_prompt = """Here's a JSON schema to follow: {pydantic_schema} Output a valid JSON object but do not repeat the schema."""
+    user_prompt = f"Extract the user detail from the following text: {data}"
     schema = pydantic_model.model_json_schema()
+
+    trace_generation = trace.generation(
+        name="user_detail_claude_haiku",
+        model="claude-3-haiku-20240307",
+        input={"system_prompt": system_prompt, "pydantic_schema": schema, "data": data},
+        version=version,
+        usage={
+            # usage
+            "input": int,
+            "output": int,
+            "total": int,  # if not set, it is derived from input + output
+            "unit": "TOKENS",  # any of: "TOKENS", "CHARACTERS", "MILLISECONDS", "SECONDS", "IMAGES"
+            # usd cost
+            "input_cost": float,
+            "output_cost": float,
+            "total_cost": float,  # if not set, it is derived from input_cost + output_cost
+        },
+    )
+
     output = anthropic.messages.create(
         model="claude-3-haiku-20240307",
         messages=[
             {
                 "role": "user",
-                "content": f"Extract the user detail from the following text: {data}",
+                "content": user_prompt,
             }
         ],
         max_tokens=1000,
@@ -434,11 +470,150 @@ def get_user_detail(data: str, pydantic_model: BaseModel):
 
     try:
         valid_user = pydantic_model.model_validate_json(output.content[0].text)
+        total = (output.usage.input_tokens * 0.00000025) + (
+            output.usage.output_tokens * 0.00000124
+        )
+        trace_generation.end(
+            output={"raw": output.content[0].text, "pydantic_output": valid_user},
+            status_message="Success",
+            model="claude-3-haiku-20240307",
+            usage={
+                # usage
+                "input": output.usage.input_tokens,
+                "output": output.usage.output_tokens,
+                "unit": "TOKENS",
+                # usd cost
+                "input_cost": output.usage.input_tokens * 0.00000025,
+                "output_cost": output.usage.output_tokens * 0.00000124,
+                "total_cost": total,
+            },
+        )
         print(valid_user)
     except Exception as e:
+        total = (output.usage.input_tokens * 0.00000025) + (
+            output.usage.output_tokens * 0.00000124
+        )
+        trace_generation.end(
+            output={"raw": output.content[0].text, "error_output": e},
+            status_message="Error",
+            usage={
+                # usage
+                "input": output.usage.input_tokens,
+                "output": output.usage.output_tokens,
+                "unit": "TOKENS",
+                # usd cost
+                "input_cost": output.usage.input_tokens * 0.00000025,
+                "output_cost": output.usage.output_tokens * 0.00000124,
+                "total_cost": total,
+            },
+        )
         print(f"Raw: {output.content[0].text}")
         print(f"Error: {e}")
 
 
+def get_job_skills(
+    data: str, pydantic_model: BaseModel, trace: StatefulTraceClient, version: str, trace_name: str
+):
+    system_prompt = """Here is a pydantic schema for a JSON object:
+
+                    <pydantic_schema>
+                    {pydantic_schema}
+                    </pydantic_schema>
+
+                    Please study this schema carefully. Your task is to output a valid JSON object that follows this
+                    schema exactly. Do not include the schema itself in your output, only the JSON object.
+
+                    Do not include any other text or explanation in your
+                    response"""
+    schema = pydantic_model.model_json_schema()
+    user_prompt = f"Extract neccessary skills from the job description: <job_description>{data}</job_description>"
+    trace_generation = trace.generation(
+        name=trace_name,
+        model="claude-3-haiku-20240307",
+        input={
+            "system_prompt": system_prompt,
+            "user_prompt": user_prompt,
+            "pydantic_schema": schema,
+            "data": data,
+        },
+        version=version,
+        usage={
+            # usage
+            "input": int,
+            "output": int,
+            "total": int,  # if not set, it is derived from input + output
+            "unit": "TOKENS",  # any of: "TOKENS", "CHARACTERS", "MILLISECONDS", "SECONDS", "IMAGES"
+            # usd cost
+            "input_cost": float,
+            "output_cost": float,
+            "total_cost": float,  # if not set, it is derived from input_cost + output_cost
+        },
+    )
+    output = anthropic.messages.create(
+        model="claude-3-haiku-20240307",
+        messages=[
+            {
+                "role": "user",
+                "content": user_prompt,
+            }
+        ],
+        max_tokens=1000,
+        system=system_prompt.format(pydantic_schema=schema),
+        temperature=0,
+    )
+
+    try:
+        valid_user = pydantic_model.model_validate_json(output.content[0].text)
+        total = (output.usage.input_tokens * 0.00000025) + (
+            output.usage.output_tokens * 0.00000124
+        )
+        trace_generation.end(
+            output={"raw": output.content[0].text, "pydantic_output": valid_user},
+            status_message="Success",
+            model="claude-3-haiku-20240307",
+            usage={
+                # usage
+                "input": output.usage.input_tokens,
+                "output": output.usage.output_tokens,
+                "unit": "TOKENS",
+                # usd cost
+                "input_cost": output.usage.input_tokens * 0.00000025,
+                "output_cost": output.usage.output_tokens * 0.00000124,
+                "total_cost": total,
+            },
+        )
+        print(valid_user)
+    except Exception as e:
+        total = (output.usage.input_tokens * 0.00000025) + (
+            output.usage.output_tokens * 0.00000124
+        )
+        trace_generation.end(
+            output={"raw": output.content[0].text, "error_output": e},
+            status_message="Error",
+            usage={
+                # usage
+                "input": output.usage.input_tokens,
+                "output": output.usage.output_tokens,
+                "unit": "TOKENS",
+                # usd cost
+                "input_cost": output.usage.input_tokens * 0.00000025,
+                "output_cost": output.usage.output_tokens * 0.00000124,
+                "total_cost": total,
+            },
+        )
+        print(f"Raw: {output.content[0].text}")
+        print(f"Error: {e}")
+
+
+version = "0.0.1"
+user_detai_trace = langfuse.trace(name="user_detail_claude", version=version)
+
 for d in data:
-    get_user_detail(d, UserDetail)
+    get_user_detail(d, UserDetail, user_detai_trace, version)
+
+version = "0.0.3"
+trace_name = "job_skills_claude_haiku"
+job_skills_trace = langfuse.trace(name=trace_name, version=version)
+for j in job_desc:
+    get_job_skills(j, JobSkills, job_skills_trace, version, trace_name)
+
