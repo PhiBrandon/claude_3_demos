@@ -1,10 +1,11 @@
 from anthropic import Anthropic
 from dotenv import load_dotenv
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import pandas as pd
 from typing import List
 from langfuse import Langfuse
 from langfuse.client import StatefulTraceClient
+
 
 load_dotenv()
 
@@ -22,10 +23,18 @@ class UserDetail(BaseModel):
     occupation: str
 
 
+class Skill(BaseModel):
+    skill_label: str = Field(..., description="Label of skill, i.e. Soft skill, technical, etc...")
+    skill_name: str
+    skill_experience: str = Field(..., description="Years of experience mentioned for this skill, if it exists.")
+
+
 class JobSkills(BaseModel):
     """Skills required for a job."""
 
-    skills: List[str]
+    skills: List[Skill]
+    job_description_summary: str
+
 
 
 data_jobs = pd.read_csv("../../data/dataset_indeed-scraper_2023-10-23_07-07-15.csv")
@@ -611,7 +620,7 @@ user_detai_trace = langfuse.trace(name="user_detail_claude", version=version)
 for d in data:
     get_user_detail(d, UserDetail, user_detai_trace, version)
 
-version = "0.0.3"
+version = "0.0.4"
 trace_name = "job_skills_claude_haiku"
 job_skills_trace = langfuse.trace(name=trace_name, version=version)
 for j in job_desc:
