@@ -11,6 +11,7 @@ import json
 from dotenv import load_dotenv
 import os
 
+
 class BedrockClient:
     """
     A client for interacting with the Bedrock service.
@@ -79,7 +80,7 @@ class BedrockClient:
         topP=1,
         topK=250,
         stop_sequence=["Human:"],
-        model_id="anthropic.claude-3-sonnet-20240229-v1:0",
+        model_id="anthropic.claude-3-haiku-20240307-v1:0",
     ):
         """
         Get the response from the Claude model.
