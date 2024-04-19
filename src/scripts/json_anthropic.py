@@ -26,7 +26,7 @@ class UserDetail(BaseModel):
 class Skill(BaseModel):
     skill_label: str = Field(..., description="Label of skill, i.e. Soft skill, technical, etc...")
     skill_name: str
-    skill_experience: str = Field(..., description="Years of experience mentioned for this skill, if it exists.")
+    original_reference: str = Field(..., description="Original reference of the skill in the job description.")
 
 
 class JobSkills(BaseModel):
